@@ -1,0 +1,38 @@
+{
+  "name": "gradestar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Distributed automated assignment grader with isolated Docker sandboxes and asynchronous BullMQ workers.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=@gradestar/api",
+    "dev:worker": "npm run dev --workspace=@gradestar/worker",
+    "dev:web": "npm run dev --workspace=@gradestar/web",
+    "dev": "npm run dev:api",
+    "build:packages": "npm run build --workspace=@gradestar/shared --workspace=@gradestar/logging --workspace=@gradestar/testing --workspace=@gradestar/database --workspace=@gradestar/evaluator --workspace=@gradestar/execution --workspace=@gradestar/language-config",
+    "build": "npm run build:packages && npm run build --workspace=@gradestar/api --workspace=@gradestar/worker --workspace=@gradestar/web",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^20.17.10",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.8"
+  }
+}

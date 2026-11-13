@@ -1,0 +1,150 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ProblemDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum TestCaseVisibility {
+  PUBLIC
+  HIDDEN
+}
+
+enum SubmissionStatus {
+  PENDING
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum Verdict {
+  ACCEPTED
+  WRONG_ANSWER
+  COMPILATION_ERROR
+  RUNTIME_ERROR
+  TIME_LIMIT_EXCEEDED
+  MEMORY_LIMIT_EXCEEDED
+  OUTPUT_LIMIT_EXCEEDED
+  SYSTEM_ERROR
+}
+
+model User {
+  id           String       @id @default(uuid())
+  name         String
+  email        String       @unique
+  passwordHash String?
+  role         UserRole     @default(USER)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  submissions  Submission[]
+
+  @@map("users")
+}
+
+model Problem {
+  id                String            @id @default(uuid())
+  slug              String            @unique
+  title             String
+  statement         String            @db.Text
+  difficulty        ProblemDifficulty
+  inputDescription  String            @db.Text
+  outputDescription String            @db.Text
+  constraints       String?           @db.Text
+  timeLimitMs       Int
+  memoryLimitMb     Int
+  isPublished       Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  testCases         TestCase[]
+  submissions       Submission[]
+
+  @@map("problems")
+}
+
+model Language {
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  version     String
+  isEnabled   Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  submissions Submission[]
+
+  @@map("languages")
+}
+
+model TestCase {
+  id              String             @id @default(uuid())
+  problemId       String
+  input           String             @db.Text
+  expectedOutput  String             @db.Text
+  visibility      TestCaseVisibility @default(PUBLIC)
+  position        Int
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  problem         Problem            @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  testCaseResults TestCaseResult[]
+
+  @@unique([problemId, position])
+  @@index([problemId])
+  @@map("test_cases")
+}
+
+model Submission {
+  id              String           @id @default(uuid())
+  userId          String
+  problemId       String
+  languageId      String
+  sourceCode      String           @db.Text
+  status          SubmissionStatus @default(PENDING)
+  verdict         Verdict?
+  queueJobId      String?          @unique
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  problem         Problem          @relation(fields: [problemId], references: [id], onDelete: Restrict)
+  language        Language         @relation(fields: [languageId], references: [id], onDelete: Restrict)
+  testCaseResults TestCaseResult[]
+
+  @@index([userId, createdAt])
+  @@index([problemId, createdAt])
+  @@index([status, createdAt])
+  @@map("submissions")
+}
+
+model TestCaseResult {
+  id              String     @id @default(uuid())
+  submissionId    String
+  testCaseId      String
+  verdict         Verdict
+  executionTimeMs Int?
+  memoryUsedKb    Int?
+  stdout          String?    @db.Text
+  stderr          String?    @db.Text
+  createdAt       DateTime   @default(now())
+  submission      Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  testCase        TestCase   @relation(fields: [testCaseId], references: [id], onDelete: Restrict)
+
+  @@unique([submissionId, testCaseId])
+  @@index([submissionId])
+  @@index([testCaseId])
+  @@map("test_case_results")
+}

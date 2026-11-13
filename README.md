@@ -33,15 +33,16 @@ When a user submits code:
 
 ## 3. Implementation Status
 
-| Milestone   | Scope                                                                                         | Status          |
-| :---------- | :-------------------------------------------------------------------------------------------- | :-------------- |
-| **Phase 1** | Repository Setup, Workspaces, Base Configurations, API & Worker Skeletons, Dev Infrastructure | **Complete** ✅ |
-| **Phase 2** | Database & Domain Models (PostgreSQL + Prisma)                                                | Planned ⏳      |
-| **Phase 3** | Core REST API (Problems, Submissions, Validation, Errors)                                     | Planned ⏳      |
-| **Phase 4** | Distributed Queue & Worker Processing (Redis + BullMQ)                                        | Planned ⏳      |
-| **Phase 5** | Evaluation Engine & Isolated Docker Execution Sandboxes                                       | Planned ⏳      |
-| **Phase 6** | Frontend Web Application (Problem Catalog, Monaco Editor, Polling)                            | Planned ⏳      |
-| **Phase 7** | End-to-End Testing, Security Hardening, Benchmarking & Release                                | Planned ⏳      |
+| Milestone    | Scope                                                                                         | Status          |
+| :----------- | :-------------------------------------------------------------------------------------------- | :-------------- |
+| **Phase 1**  | Repository Setup, Workspaces, Base Configurations, API & Worker Skeletons, Dev Infrastructure | **Complete** ✅ |
+| **Phase 2A** | Database & Domain Models (PostgreSQL + Prisma, Enums, Migrations, Seed)                       | **Complete** ✅ |
+| **Phase 2B** | Database Constraints & Data Integrity Audit                                                   | Planned ⏳      |
+| **Phase 3**  | Core REST API (Problems, Submissions, Validation, Errors)                                     | Planned ⏳      |
+| **Phase 4**  | Distributed Queue & Worker Processing (Redis + BullMQ)                                        | Planned ⏳      |
+| **Phase 5**  | Evaluation Engine & Isolated Docker Execution Sandboxes                                       | Planned ⏳      |
+| **Phase 6**  | Frontend Web Application (Problem Catalog, Monaco Editor, Polling)                            | Planned ⏳      |
+| **Phase 7**  | End-to-End Testing, Security Hardening, Benchmarking & Release                                | Planned ⏳      |
 
 ---
 
@@ -78,7 +79,7 @@ NODE_ENV=development
 API_PORT=4000
 WEB_PORT=3000
 LOG_LEVEL=info
-DATABASE_URL=postgresql://gradestar:gradestar_dev_secret@localhost:5432/gradestar?schema=public
+DATABASE_URL=postgresql://gradestar:gradestar_dev_secret@localhost:5433/gradestar?schema=public
 REDIS_URL=redis://localhost:6379
 ```
 
@@ -97,6 +98,24 @@ Verify service health:
 docker compose ps
 ```
 
+### 4. Database Setup (Migrations & Seeding)
+
+With PostgreSQL running, apply migrations, generate the Prisma client, and seed initial data:
+
+```bash
+# Check migration status
+npm run db:status
+
+# Apply migrations
+npm run db:migrate
+
+# Generate Prisma Client
+npm run db:generate
+
+# Seed default languages and sample problems
+npm run db:seed
+```
+
 To stop infrastructure:
 
 ```bash
@@ -108,6 +127,28 @@ npm run infra:down
 ## 6. Development & Run Commands
 
 You can run individual services or check the entire monorepo:
+
+### Database Operations
+
+```bash
+# Generate Prisma Client
+npm run db:generate
+
+# Apply pending migrations locally
+npm run db:migrate
+
+# Inspect migration status against PostgreSQL
+npm run db:status
+
+# Deploy migrations (for CI / production)
+npm run db:deploy
+
+# Run idempotent seed script
+npm run db:seed
+
+# Run database tests only
+npm run test --workspace=@gradestar/database
+```
 
 ### Running Services
 

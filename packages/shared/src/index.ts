@@ -40,12 +40,46 @@ export interface ReadyResponse {
 }
 
 /**
- * Canonical GradeSTAR submission verdicts
+ * Domain Role Enum
  */
-export enum SubmissionVerdict {
+export enum UserRole {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+}
+
+/**
+ * Problem Difficulty Enum
+ */
+export enum ProblemDifficulty {
+  EASY = 'EASY',
+  MEDIUM = 'MEDIUM',
+  HARD = 'HARD',
+}
+
+/**
+ * Test Case Visibility Enum
+ */
+export enum TestCaseVisibility {
+  PUBLIC = 'PUBLIC',
+  HIDDEN = 'HIDDEN',
+}
+
+/**
+ * Submission Lifecycle Status Enum
+ */
+export enum SubmissionStatus {
   PENDING = 'PENDING',
   QUEUED = 'QUEUED',
   RUNNING = 'RUNNING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
+}
+
+/**
+ * Canonical GradeSTAR Evaluation Verdict Enum
+ */
+export enum Verdict {
   ACCEPTED = 'ACCEPTED',
   WRONG_ANSWER = 'WRONG_ANSWER',
   COMPILATION_ERROR = 'COMPILATION_ERROR',
@@ -54,8 +88,15 @@ export enum SubmissionVerdict {
   MEMORY_LIMIT_EXCEEDED = 'MEMORY_LIMIT_EXCEEDED',
   OUTPUT_LIMIT_EXCEEDED = 'OUTPUT_LIMIT_EXCEEDED',
   SYSTEM_ERROR = 'SYSTEM_ERROR',
-  CANCELLED = 'CANCELLED',
 }
+
+/**
+ * @deprecated Use SubmissionStatus and Verdict for clean separation of lifecycle and verdict
+ */
+export const SubmissionVerdict = {
+  ...SubmissionStatus,
+  ...Verdict,
+} as const;
 
 /**
  * Supported programming languages (to be expanded in subsequent phases)

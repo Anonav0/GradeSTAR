@@ -13,11 +13,25 @@
     }
   },
   "scripts": {
-    "build": "tsc -b",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:status": "prisma migrate status",
+    "seed": "tsx src/seed.ts",
+    "build": "prisma generate && tsc -b",
     "clean": "rm -rf dist",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "dotenv": "^16.4.7"
   },
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "@types/node": "^20.17.10",
+    "prisma": "6.19.3",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }

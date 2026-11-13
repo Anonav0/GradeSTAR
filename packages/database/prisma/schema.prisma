@@ -73,6 +73,7 @@ model Problem {
   testCases         TestCase[]
   submissions       Submission[]
 
+  @@index([isPublished])
   @@map("problems")
 }
 

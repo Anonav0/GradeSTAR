@@ -13,8 +13,8 @@
     }
   },
   "scripts": {
-    "build": "tsc -b",
-    "clean": "rm -rf dist",
+    "build": "tsc -b --force",
+    "clean": "tsc -b --clean && rm -rf dist",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

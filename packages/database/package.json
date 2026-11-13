@@ -18,8 +18,8 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:status": "prisma migrate status",
     "seed": "tsx src/seed.ts",
-    "build": "prisma generate && tsc -b",
-    "clean": "rm -rf dist",
+    "build": "prisma generate && tsc -b --force",
+    "clean": "tsc -b --clean && rm -rf dist",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

@@ -2,14 +2,45 @@ name: CI
 
 on:
   push:
-    branches: [main, v1.0]
+    branches: [main, 'v*']
   pull_request:
-    branches: [main, v1.0]
+    branches: [main, 'v*']
 
 jobs:
   validate:
     name: Lint, Typecheck, Test & Build
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: gradestar
+          POSTGRES_PASSWORD: gradestar_dev_secret
+          POSTGRES_DB: gradestar
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U gradestar -d gradestar"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://gradestar:gradestar_dev_secret@localhost:5433/gradestar?schema=public
+      REDIS_URL: redis://localhost:6379
+      API_PORT: 4000
 
     steps:
       - name: Checkout code
@@ -23,6 +54,20 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Prepare environment configuration
+        run: |
+          cp .env.example .env
+          ln -sf ../../.env packages/database/.env
+
+      - name: Build internal packages & generate Prisma Client
+        run: npm run build:packages
+
+      - name: Run database migrations
+        run: npm run db:deploy
+
+      - name: Seed test database
+        run: npm run db:seed
 
       - name: Verify formatting
         run: npm run format:check

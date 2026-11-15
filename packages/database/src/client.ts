@@ -10,15 +10,19 @@ declare global {
  * In development, reuses the instance attached to globalThis to prevent connection pool exhaustion during hot reload.
  */
 export function getPrismaClient(): PrismaClient {
+  const isTest = process.env['NODE_ENV'] === 'test' || Boolean(process.env['VITEST']);
+  const logLevels: ('error' | 'warn')[] =
+    isTest && !process.env['PRISMA_LOG_LEVEL'] ? [] : ['error', 'warn'];
+
   if (process.env['NODE_ENV'] === 'production') {
     return new PrismaClient({
-      log: ['error', 'warn'],
+      log: logLevels,
     });
   }
 
   if (!globalThis.__gradestar_prisma__) {
     globalThis.__gradestar_prisma__ = new PrismaClient({
-      log: ['error', 'warn'],
+      log: logLevels,
     });
   }
 

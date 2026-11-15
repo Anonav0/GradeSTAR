@@ -26,6 +26,7 @@
     "db:deploy": "npm run prisma:deploy --workspace=@gradestar/database",
     "db:status": "npm run prisma:status --workspace=@gradestar/database",
     "db:seed": "npm run seed --workspace=@gradestar/database",
+    "db:verify-clean": "npm run verify-clean --workspace=@gradestar/database",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "infra:logs": "docker compose logs -f"

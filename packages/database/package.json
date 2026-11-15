@@ -18,6 +18,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:status": "prisma migrate status",
     "seed": "tsx src/seed.ts",
+    "verify-clean": "tsx scripts/verify-clean-db.ts",
     "build": "prisma generate && tsc -b --force",
     "clean": "tsc -b --clean && rm -rf dist",
     "typecheck": "tsc --noEmit",

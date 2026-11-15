@@ -1,21 +1,27 @@
 import 'dotenv/config';
-import { prisma, disconnectPrisma, ProblemDifficulty, TestCaseVisibility } from './index.js';
+import {
+  ProblemDifficulty,
+  TestCaseVisibility,
+  type Prisma,
+  type PrismaClient,
+} from '@prisma/client';
+import { prisma, disconnectPrisma } from './client.js';
 
-interface SeedLanguage {
+export interface SeedLanguage {
   name: string;
   slug: string;
   version: string;
   isEnabled: boolean;
 }
 
-interface SeedTestCase {
+export interface SeedTestCase {
   input: string;
   expectedOutput: string;
   visibility: TestCaseVisibility;
   position: number;
 }
 
-interface SeedProblem {
+export interface SeedProblem {
   slug: string;
   title: string;
   statement: string;
@@ -29,7 +35,13 @@ interface SeedProblem {
   testCases: SeedTestCase[];
 }
 
-const LANGUAGES: SeedLanguage[] = [
+export interface SeedSummary {
+  languagesCount: number;
+  problemsCount: number;
+  testCasesCount: number;
+}
+
+export const SEED_LANGUAGES: readonly SeedLanguage[] = [
   {
     name: 'C++17',
     slug: 'cpp17',
@@ -48,9 +60,9 @@ const LANGUAGES: SeedLanguage[] = [
     version: '21',
     isEnabled: true,
   },
-];
+] as const;
 
-const PROBLEMS: SeedProblem[] = [
+export const SEED_PROBLEMS: readonly SeedProblem[] = [
   {
     slug: 'two-sum',
     title: 'Two Sum',
@@ -171,90 +183,118 @@ const PROBLEMS: SeedProblem[] = [
       },
     ],
   },
-];
+] as const;
 
-export async function seedDatabase(): Promise<{
-  languagesCount: number;
-  problemsCount: number;
-  testCasesCount: number;
-}> {
+/**
+ * Validates that required database connection configuration is present.
+ * Fails fast without exposing secrets in logs.
+ */
+export function validateDatabaseConfig(): void {
+  const dbUrl = process.env['DATABASE_URL'];
+  if (!dbUrl || dbUrl.trim() === '') {
+    throw new Error(
+      'DATABASE_URL environment variable is missing or empty. Database seeding aborted.',
+    );
+  }
+}
+
+/**
+ * Seeds canonical languages, problems, and test cases idempotently into PostgreSQL.
+ *
+ * Guarantees:
+ * - Atomic: Wrapped in a database transaction so partial seed failures leave no dirty state.
+ * - Idempotent: Uses upsert on unique keys (slug, problemId_position) to update existing
+ *   seed-managed records without creating duplicates.
+ * - Non-destructive: Preserves unrelated user records, submissions, and evaluation telemetry.
+ */
+export async function seedDatabase(client: PrismaClient = prisma): Promise<SeedSummary> {
+  validateDatabaseConfig();
+
   // eslint-disable-next-line no-console
   console.log('Starting GradeSTAR database seeding...');
 
-  // 1. Seed Languages (idempotent upsert by slug)
-  for (const lang of LANGUAGES) {
-    await prisma.language.upsert({
-      where: { slug: lang.slug },
-      update: {
-        name: lang.name,
-        version: lang.version,
-        isEnabled: lang.isEnabled,
-      },
-      create: {
-        name: lang.name,
-        slug: lang.slug,
-        version: lang.version,
-        isEnabled: lang.isEnabled,
-      },
-    });
-  }
-
-  // 2. Seed Problems and Test Cases (idempotent upsert)
-  for (const prob of PROBLEMS) {
-    const problem = await prisma.problem.upsert({
-      where: { slug: prob.slug },
-      update: {
-        title: prob.title,
-        statement: prob.statement,
-        difficulty: prob.difficulty,
-        inputDescription: prob.inputDescription,
-        outputDescription: prob.outputDescription,
-        constraints: prob.constraints,
-        timeLimitMs: prob.timeLimitMs,
-        memoryLimitMb: prob.memoryLimitMb,
-        isPublished: prob.isPublished,
-      },
-      create: {
-        slug: prob.slug,
-        title: prob.title,
-        statement: prob.statement,
-        difficulty: prob.difficulty,
-        inputDescription: prob.inputDescription,
-        outputDescription: prob.outputDescription,
-        constraints: prob.constraints,
-        timeLimitMs: prob.timeLimitMs,
-        memoryLimitMb: prob.memoryLimitMb,
-        isPublished: prob.isPublished,
-      },
-    });
-
-    for (const tc of prob.testCases) {
-      await prisma.testCase.upsert({
-        where: {
-          problemId_position: {
-            problemId: problem.id,
-            position: tc.position,
+  await client.$transaction(
+    async (tx: Prisma.TransactionClient) => {
+      // 1. Seed Languages (idempotent upsert by slug)
+      for (const lang of SEED_LANGUAGES) {
+        await tx.language.upsert({
+          where: { slug: lang.slug },
+          update: {
+            name: lang.name,
+            version: lang.version,
+            isEnabled: lang.isEnabled,
           },
-        },
-        update: {
-          input: tc.input,
-          expectedOutput: tc.expectedOutput,
-          visibility: tc.visibility,
-        },
-        create: {
-          problemId: problem.id,
-          input: tc.input,
-          expectedOutput: tc.expectedOutput,
-          visibility: tc.visibility,
-          position: tc.position,
-        },
-      });
-    }
-  }
+          create: {
+            name: lang.name,
+            slug: lang.slug,
+            version: lang.version,
+            isEnabled: lang.isEnabled,
+          },
+        });
+      }
 
-  const languagesCount = await prisma.language.count();
-  const problemsCount = await prisma.problem.count();
-  const testCasesCount = await prisma.testCase.count();
+      // 2. Seed Problems and Test Cases (idempotent upsert)
+      for (const prob of SEED_PROBLEMS) {
+        const problem = await tx.problem.upsert({
+          where: { slug: prob.slug },
+          update: {
+            title: prob.title,
+            statement: prob.statement,
+            difficulty: prob.difficulty,
+            inputDescription: prob.inputDescription,
+            outputDescription: prob.outputDescription,
+            constraints: prob.constraints,
+            timeLimitMs: prob.timeLimitMs,
+            memoryLimitMb: prob.memoryLimitMb,
+            isPublished: prob.isPublished,
+          },
+          create: {
+            slug: prob.slug,
+            title: prob.title,
+            statement: prob.statement,
+            difficulty: prob.difficulty,
+            inputDescription: prob.inputDescription,
+            outputDescription: prob.outputDescription,
+            constraints: prob.constraints,
+            timeLimitMs: prob.timeLimitMs,
+            memoryLimitMb: prob.memoryLimitMb,
+            isPublished: prob.isPublished,
+          },
+        });
+
+        for (const tc of prob.testCases) {
+          await tx.testCase.upsert({
+            where: {
+              problemId_position: {
+                problemId: problem.id,
+                position: tc.position,
+              },
+            },
+            update: {
+              input: tc.input,
+              expectedOutput: tc.expectedOutput,
+              visibility: tc.visibility,
+            },
+            create: {
+              problemId: problem.id,
+              input: tc.input,
+              expectedOutput: tc.expectedOutput,
+              visibility: tc.visibility,
+              position: tc.position,
+            },
+          });
+        }
+      }
+    },
+    {
+      maxWait: 10000,
+      timeout: 30000,
+    },
+  );
+
+  const languagesCount = await client.language.count();
+  const problemsCount = await client.problem.count();
+  const testCasesCount = await client.testCase.count();
 
   // eslint-disable-next-line no-console
   console.log(
@@ -272,7 +312,9 @@ if (process.argv[1]?.endsWith('seed.ts') || process.argv[1]?.endsWith('seed.js')
       process.exit(0);
     })
     .catch(async (error) => {
-      console.error('Database seeding failed:', error);
+      // Safely log error message without printing raw secrets/connection strings
+      const safeMessage = error instanceof Error ? error.message : String(error);
+      console.error('Database seeding failed:', safeMessage);
       await disconnectPrisma();
       process.exit(1);
     });

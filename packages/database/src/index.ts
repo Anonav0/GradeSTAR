@@ -24,6 +24,29 @@ export {
 } from './lifecycle.js';
 
 export {
+  SEED_LANGUAGES,
+  SEED_PROBLEMS,
+  type SeedLanguage,
+  type SeedTestCase,
+  type SeedProblem,
+  type SeedSummary,
+  validateDatabaseConfig,
+  seedDatabase,
+} from './seed.js';
+
+export {
+  type DbClient,
+  type ProblemWithPublicTestCases,
+  getPublishedProblemBySlug,
+  getPublicTestCases,
+  getEvaluationTestCases,
+  getEnabledLanguages,
+  getUserSubmissions,
+  getProblemSubmissions,
+  getSubmissionWithDetails,
+} from './queries.js';
+
+export {
   PrismaClient,
   Prisma,
   UserRole,

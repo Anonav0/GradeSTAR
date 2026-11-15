@@ -94,17 +94,17 @@ gradestar/
 
 ### Component Breakdown
 
-| Component                      | Responsibility                                                                                                                       | Current Status                           |
-| :----------------------------- | :----------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------- |
-| **`apps/web`**                 | User interface, problem catalog, Monaco code editor, submission polling, and verdict telemetry display.                              | Scaffolded (Phase 1 Preview)             |
-| **`apps/api`**                 | REST endpoints (`/health`, `/ready`, `/submissions`), request validation, authentication, submission creation, and queue publishing. | Functional (`/health`, `/ready`, errors) |
-| **`apps/worker`**              | Independent daemon processing evaluation jobs from BullMQ, pulling test cases, running containers, and storing verdicts.             | Scaffolded (Lifecycle management)        |
-| **`packages/shared`**          | Contract types: `HealthResponse`, `ReadyResponse`, `ApiErrorResponse`, `SubmissionVerdict`.                                          | Functional                               |
-| **`packages/logging`**         | Structured JSON logging in production; formatted colored output in local development.                                                | Functional                               |
-| **`packages/database`**        | Prisma ORM client, relational schema, migrations, connection lifecycle.                                                              | Planned (Phase 2)                        |
-| **`packages/evaluator`**       | Output diffing, trailing whitespace normalization, and verdict classification.                                                       | Planned (Phase 5)                        |
-| **`packages/execution`**       | Docker container runtime lifecycle, resource limits, and timeout enforcement.                                                        | Planned (Phase 5)                        |
-| **`packages/language-config`** | Explicit definitions for C++17, Python 3, and Java 21 compilation & execution.                                                       | Planned (Phase 5)                        |
+| Component                      | Responsibility                                                                                                                    | Current Status                                                                      |
+| :----------------------------- | :-------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
+| **`apps/web`**                 | User interface, problem catalog, Monaco code editor, submission polling, and verdict telemetry display.                           | Scaffolded (Phase 1 Preview)                                                        |
+| **`apps/api`**                 | REST endpoints (`/health`, `/ready`, `/api/v1/*`), request validation, authentication, submission creation, and queue publishing. | Functional (API Foundation, Health & Readiness, Zod Validation, Centralized Errors) |
+| **`apps/worker`**              | Independent daemon processing evaluation jobs from BullMQ, pulling test cases, running containers, and storing verdicts.          | Scaffolded (Lifecycle management)                                                   |
+| **`packages/shared`**          | Contract types: `HealthResponse`, `ReadyResponse`, `ApiErrorResponse`, `SubmissionVerdict`, lifecycle and verdict enums.          | Functional                                                                          |
+| **`packages/logging`**         | Structured JSON logging in production; formatted colored output in local development.                                             | Functional                                                                          |
+| **`packages/database`**        | Prisma ORM client, relational schema, migrations, connection lifecycle, relational query helpers, and transaction lifecycle.      | Functional (Phase 2 Verified)                                                       |
+| **`packages/evaluator`**       | Output diffing, trailing whitespace normalization, and verdict classification.                                                    | Planned (Phase 5)                                                                   |
+| **`packages/execution`**       | Docker container runtime lifecycle, resource limits, and timeout enforcement.                                                     | Planned (Phase 5)                                                                   |
+| **`packages/language-config`** | Explicit definitions for C++17, Python 3, and Java 21 compilation & execution.                                                    | Planned (Phase 5)                                                                   |
 
 ---
 

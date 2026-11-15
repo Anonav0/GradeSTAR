@@ -1,49 +1,64 @@
 import express, { type Application } from 'express';
 import cors from 'cors';
-import { pinoHttp } from 'pino-http';
-import type { Logger } from '@gradestar/logging';
-import { createHealthRouter } from './routes/health.js';
-import { notFoundHandler } from './middleware/notFoundHandler.js';
-import { createErrorHandler } from './middleware/errorHandler.js';
+import { createLogger, type Logger } from '@gradestar/logging';
+import { requestIdMiddleware } from './middleware/request-id.js';
+import { createRequestLogger } from './middleware/request-logger.js';
+import { notFoundHandler } from './middleware/not-found.js';
+import { createErrorHandler } from './middleware/error-handler.js';
+import { createRootRouter } from './routes/index.js';
 
 export interface AppOptions {
-  logger: Logger;
+  logger?: Logger;
+  checkDbHealth?: () => Promise<{ ok: boolean; latencyMs?: number; error?: string }>;
+  dbTimeoutMs?: number;
+  corsOrigin?: string;
 }
 
 /**
  * Express application factory.
  * Separated from server listener to facilitate unit/integration testing without port binding.
  */
-export function createApp(options: AppOptions): Application {
+export function createApp(options: AppOptions = {}): Application {
   const app = express();
 
-  // Security and cross-origin handling
-  app.use(cors());
+  const logger =
+    options.logger ??
+    createLogger({
+      serviceName: 'gradestar-api',
+      isProduction: process.env['NODE_ENV'] === 'production',
+      logLevel: process.env['LOG_LEVEL'] || 'info',
+    });
 
-  // Structured HTTP request logging
+  // 1. Cross-origin resource sharing
   app.use(
-    pinoHttp({
-      logger: options.logger,
-      autoLogging: {
-        ignore: (req) => req.url === '/health' || req.url === '/ready',
-      },
+    cors({
+      origin: options.corsOrigin || process.env['CORS_ORIGIN'] || '*',
     }),
   );
 
-  // Request body parsing with strict size limits to prevent body-flooding DoS
+  // 2. Correlation Request ID middleware
+  app.use(requestIdMiddleware);
+
+  // 3. Structured HTTP request logging with header redaction
+  app.use(createRequestLogger({ logger }));
+
+  // 4. Request body parsing with strict size limits
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-  // Health and readiness routes
-  const healthRouter = createHealthRouter();
-  app.use(healthRouter);
-  app.use('/api/v1', healthRouter);
+  // 5. Mount root and versioned routes (/health, /ready, /api/v1/*)
+  app.use(
+    createRootRouter({
+      checkDbHealth: options.checkDbHealth,
+      dbTimeoutMs: options.dbTimeoutMs,
+    }),
+  );
 
-  // 404 handler
+  // 6. JSON 404 handler for unmatched routes
   app.use(notFoundHandler);
 
-  // Centralized error handler
-  app.use(createErrorHandler(options.logger));
+  // 7. Centralized error handling middleware
+  app.use(createErrorHandler(logger));
 
   return app;
 }

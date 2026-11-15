@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@gradestar/database": "*",
     "@gradestar/logging": "*",
     "@gradestar/shared": "*",
     "cors": "^2.8.5",

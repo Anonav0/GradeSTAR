@@ -7,7 +7,7 @@ describe('API 404 Handler', () => {
   const logger = createLogger({ serviceName: 'test-api', logLevel: 'silent' });
   const app = createApp({ logger });
 
-  it('returns 404 with structured ApiErrorResponse for unknown route', async () => {
+  it('returns 404 with structured ApiErrorResponse and requestId for unknown route', async () => {
     const res = await request(app).get('/unknown-nonexistent-endpoint');
     expect(res.status).toBe(404);
     expect(res.body).toEqual({
@@ -15,6 +15,8 @@ describe('API 404 Handler', () => {
       error: 'NotFound',
       message: 'Cannot GET /unknown-nonexistent-endpoint',
       timestamp: expect.any(String),
+      requestId: expect.any(String),
     });
+    expect(res.headers['x-request-id']).toBe(res.body.requestId);
   });
 });

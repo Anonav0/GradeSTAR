@@ -60,4 +60,5 @@ export {
   type TestCase,
   type Submission,
   type TestCaseResult,
+  type Session,
 } from '@prisma/client';

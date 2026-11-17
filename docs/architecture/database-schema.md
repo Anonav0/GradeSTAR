@@ -17,6 +17,7 @@ GradeSTAR persists system state in PostgreSQL using Prisma ORM. The relational d
 ```mermaid
 erDiagram
     User ||--o{ Submission : "submits (onDelete: RESTRICT)"
+    User ||--o{ Session : "authenticates (onDelete: CASCADE)"
     Problem ||--o{ TestCase : "contains (onDelete: CASCADE)"
     Problem ||--o{ Submission : "targets (onDelete: RESTRICT)"
     Language ||--o{ Submission : "written in (onDelete: RESTRICT)"
@@ -28,9 +29,20 @@ erDiagram
         String name
         String email UK "Unique (case-sensitive at DB level)"
         String passwordHash "Nullable"
-        UserRole role "STUDENT | INSTRUCTOR | ADMIN"
+        UserRole role "USER | ADMIN"
         DateTime createdAt
         DateTime updatedAt
+    }
+
+    Session {
+        String id PK "UUID"
+        String userId FK "UUID (onDelete: CASCADE)"
+        String tokenHash UK "SHA-256 hash of raw session token"
+        String csrfToken "Cryptographically secure random secret"
+        DateTime expiresAt "Indexed: sessions_expiresAt_idx"
+        DateTime createdAt
+        DateTime lastSeenAt
+        DateTime revokedAt "Nullable"
     }
 
     Problem {

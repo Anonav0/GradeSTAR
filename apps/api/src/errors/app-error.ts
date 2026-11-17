@@ -49,6 +49,18 @@ export class AppError extends Error {
     return new AppError(400, code, message, { details });
   }
 
+  static unauthorized(message = 'Authentication required', code = 'UNAUTHENTICATED'): AppError {
+    return new AppError(401, code, message);
+  }
+
+  static unauthenticated(message = 'Authentication required', code = 'UNAUTHENTICATED'): AppError {
+    return new AppError(401, code, message);
+  }
+
+  static forbidden(message = 'Access forbidden', code = 'FORBIDDEN', details?: unknown): AppError {
+    return new AppError(403, code, message, { details });
+  }
+
   static notFound(message: string, code = 'NOT_FOUND', details?: unknown): AppError {
     return new AppError(404, code, message, { details });
   }

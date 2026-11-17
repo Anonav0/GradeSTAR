@@ -133,6 +133,7 @@ async function main() {
       '_prisma_migrations',
       'languages',
       'problems',
+      'sessions',
       'submissions',
       'test_case_results',
       'test_cases',

@@ -16,14 +16,18 @@
     "@gradestar/database": "*",
     "@gradestar/logging": "*",
     "@gradestar/shared": "*",
+    "argon2": "^0.45.2",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.7.4",
     "pino-http": "^10.4.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@gradestar/testing": "*",
+    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^20.17.10",

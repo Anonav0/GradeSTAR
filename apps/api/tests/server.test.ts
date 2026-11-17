@@ -32,6 +32,19 @@ describe('Server Lifecycle and Graceful Shutdown', () => {
     expect(onCloseSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('disconnects backing resources by default when onClose is omitted', async () => {
+    const env = validateEnv({ API_PORT: '0', HOST: '127.0.0.1' });
+    const instance = await startServer({
+      env,
+      logger,
+      registerSignalHandlers: false,
+    });
+
+    expect(instance.server.listening).toBe(true);
+    await expect(instance.shutdown('SIGTERM')).resolves.not.toThrow();
+    expect(instance.server.listening).toBe(false);
+  });
+
   it('handles repeated shutdown calls idempotently without error', async () => {
     const onCloseSpy = vi.fn();
     const env = validateEnv({ API_PORT: '0', HOST: '127.0.0.1' });

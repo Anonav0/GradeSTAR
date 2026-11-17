@@ -24,6 +24,13 @@ describe('API Health and Readiness Endpoints', () => {
       expect(res.body).toHaveProperty('status', 'ok');
     });
 
+    it('initializes application with default options when no config provided', async () => {
+      const defaultApp = createApp();
+      const res = await request(defaultApp).get('/health');
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('ok');
+    });
+
     it('GET /health succeeds even if database is unavailable', async () => {
       const appWithBrokenDb = createApp({
         logger,

@@ -36,6 +36,12 @@ describe('API Error Handling Middleware', () => {
         submissionId: '123',
       });
     });
+    app.get('/rate-limit-item', () => {
+      throw AppError.tooManyRequests();
+    });
+    app.get('/service-unavail-item', () => {
+      throw AppError.serviceUnavailable('Database unreachable');
+    });
     app.use(createErrorHandler(logger));
 
     const res404 = await request(app).get('/not-found-item');
@@ -48,6 +54,31 @@ describe('API Error Handling Middleware', () => {
     expect(res409.status).toBe(409);
     expect(res409.body.error).toBe('SUBMISSION_LOCKED');
     expect(res409.body.details).toEqual({ submissionId: '123' });
+
+    const res429 = await request(app).get('/rate-limit-item');
+    expect(res429.status).toBe(429);
+    expect(res429.body.error).toBe('RATE_LIMITED');
+
+    const res503 = await request(app).get('/service-unavail-item');
+    expect(res503.status).toBe(503);
+    expect(res503.body.error).toBe('SERVICE_UNAVAILABLE');
+  });
+
+  it('constructs internal and options variants of AppError correctly', () => {
+    const internalErr = AppError.internal(
+      'Internal crash',
+      'INTERNAL_ERROR',
+      new Error('db failure'),
+    );
+    expect(internalErr.statusCode).toBe(500);
+    expect(internalErr.code).toBe('INTERNAL_ERROR');
+    expect(internalErr.isOperational).toBe(false);
+    expect(internalErr.cause).toBeDefined();
+
+    const customErr = new AppError(418, 'TEAPOT', 'I am a teapot', { details: { custom: true } });
+    expect(customErr.statusCode).toBe(418);
+    expect(customErr.code).toBe('TEAPOT');
+    expect(customErr.details).toEqual({ custom: true });
   });
 
   it('handles unexpected internal server errors safely in non-production mode', async () => {

@@ -1,6 +1,6 @@
 # GradeSTAR .gitignore
 
-# Prompt and documentation specs
+#documentation specs
 .docs
 
 # Dependencies

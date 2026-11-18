@@ -62,14 +62,7 @@ export function createApp(options: AppOptions = {}): Application {
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
   // 6. Mount root and versioned routes (/health, /ready, /api/v1/*)
-  app.use(
-    createRootRouter({
-      checkDbHealth: options.checkDbHealth,
-      dbTimeoutMs: options.dbTimeoutMs,
-      includeTestRoutes: options.includeTestRoutes,
-      rateLimiterOptions: options.rateLimiterOptions,
-    }),
-  );
+  app.use(createRootRouter(options));
 
   // 7. JSON 404 handler for unmatched routes
   app.use(notFoundHandler);

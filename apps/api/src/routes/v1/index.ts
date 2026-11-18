@@ -2,17 +2,20 @@ import { Router, type Request, type Response } from 'express';
 import { UserRole } from '@gradestar/database';
 import { createSystemRouter, type SystemRouterOptions } from './system.routes.js';
 import { createAuthRouter, type AuthRouterOptions } from './auth.routes.js';
+import { createProblemRouter, type ProblemRouterOptions } from './problem.routes.js';
+import { createLanguageRouter, type LanguageRouterOptions } from './language.routes.js';
 import { authenticate } from '../../middleware/authenticate.js';
 import { requireRole, requireOwnership } from '../../middleware/authorize.js';
 import { validateCsrf } from '../../middleware/csrf.js';
 
-export interface V1RouterOptions extends SystemRouterOptions, AuthRouterOptions {
+export interface V1RouterOptions
+  extends SystemRouterOptions, AuthRouterOptions, ProblemRouterOptions, LanguageRouterOptions {
   includeTestRoutes?: boolean;
 }
 
 /**
  * Express router for API version 1 (/api/v1).
- * Mounts system and authentication routes, and test verification routes in non-production environments.
+ * Mounts system, authentication, problem discovery, and language endpoints.
  */
 export function createV1Router(options: V1RouterOptions = {}): Router {
   const router = Router();
@@ -22,6 +25,12 @@ export function createV1Router(options: V1RouterOptions = {}): Router {
 
   // Authentication endpoints: /api/v1/auth/*
   router.use('/auth', createAuthRouter(options));
+
+  // Problem discovery endpoints: /api/v1/problems/*
+  router.use('/problems', createProblemRouter(options));
+
+  // Language discovery endpoints: /api/v1/languages/*
+  router.use('/languages', createLanguageRouter(options));
 
   // Test-only authorization and ownership endpoints (never mounted in production)
   const shouldMountTestRoutes = options.includeTestRoutes ?? process.env['NODE_ENV'] === 'test';

@@ -57,6 +57,8 @@ export enum ProblemDifficulty {
   HARD = 'HARD',
 }
 
+export type ProblemDifficultyValue = 'EASY' | 'MEDIUM' | 'HARD';
+
 /**
  * Test Case Visibility Enum
  */
@@ -103,3 +105,87 @@ export const SubmissionVerdict = {
  * Supported programming languages (to be expanded in subsequent phases)
  */
 export type SupportedLanguageId = 'cpp17' | 'python3' | 'java21';
+
+/**
+ * Standard API success response envelope
+ */
+export interface ApiResponse<T> {
+  success: true;
+  data: T;
+}
+
+/**
+ * Problem list summary item for candidate discovery
+ */
+export interface ProblemListItem {
+  slug: string;
+  title: string;
+  difficulty: ProblemDifficulty | ProblemDifficultyValue;
+  createdAt: string | Date;
+}
+
+/**
+ * Standard pagination metadata
+ */
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+/**
+ * Paginated problem listing payload
+ */
+export interface ProblemListResult {
+  items: ProblemListItem[];
+  pagination: PaginationMeta;
+}
+
+export type ProblemListResponse = ApiResponse<ProblemListResult>;
+
+/**
+ * Public sample test case visible to candidates
+ */
+export interface PublicSampleTestCase {
+  input: string;
+  expectedOutput: string;
+  position: number;
+}
+
+/**
+ * Detailed problem view for solving
+ */
+export interface ProblemDetail {
+  slug: string;
+  title: string;
+  statement: string;
+  difficulty: ProblemDifficulty | ProblemDifficultyValue;
+  inputDescription: string;
+  outputDescription: string;
+  constraints: string | null;
+  timeLimitMs: number;
+  memoryLimitMb: number;
+  sampleTestCases: PublicSampleTestCase[];
+}
+
+export interface ProblemDetailResult {
+  problem: ProblemDetail;
+}
+
+export type ProblemDetailResponse = ApiResponse<ProblemDetailResult>;
+
+/**
+ * Enabled programming language item
+ */
+export interface EnabledLanguageItem {
+  name: string;
+  slug: string;
+  version: string;
+}
+
+export interface EnabledLanguagesResult {
+  items: EnabledLanguageItem[];
+}
+
+export type LanguageListResponse = ApiResponse<EnabledLanguagesResult>;
